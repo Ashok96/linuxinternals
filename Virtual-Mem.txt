@@ -1,0 +1,98 @@
+Virtual File System(VFS):
+
+Virtual File System is an abstraction layer ( you don’t have a door but you know the frame of the door, kind of framework)
+Everything is a file philosophy of unix
+Adopted by Linux
+
+
+What is a filesystem:
+Hierarchical collection of data organized into directores, sub directories and files
+But Linux also requires a file system to implement:
+Open()
+Read()
+Write()
+Close()
+
+Linux generally regards these “things” as objects that linux is managing in memory
+
+VFS:
+Linux does not stringently define what a file system is, this is left up to the implementer
+Its a virtual file system because Linux defines “hooks” ( abstraction) where implementer can hang their desired file system
+Linux does not specify a “default” definition its totally left up to the implementer
+
+Echo “Hello VFS World” > /dev/pts/0
+— Hello VFS World 
+
+The VFS:
+Communicates with:
+Memory Manager
+Process Scheduler
+Network Interface
+Implements file systems like:
+Ext4
+Bttrfs
+NFS
+/proc
+Tmpfs
+etc
+
+How VFS works:
+VFS sits between the userspace application and then implementers code which defines the actual file system
+Sometimes vfs is called a “shim layer”
+VFS uses the implementers code to reach the device driver or
+Memory access methods(accessors)
+Accessors of course do not perform file I/O , they access memory directly
+VFS promotes code reuse
+The device driver can worry about the device
+File system can worry about how to implement and open(), write(), read() and close()
+VFS can worry about the syscalls and how to direct them
+
+How do you find what file systems are actually “real” mounted file systems ? ANd ones which are just memory accessors ?
+ Example : “mount | grep -v sd | grep -v :/”
+Will list all mounted filesystems not resident on a physical disk 
+Tip: Arch Wiki contains an article which will show you how to gain a bit more performance at the expense of memory by moving your /tmp from the root filesystem ( or whatever disk partition you mounted on ) to tmpfs which is located on the memory
+
+So what about /proc files 
+The /proc files are sort of a weird thing in Linux
+Files in this directory do not actually exist, until you access them
+They are actually shared memory and have no file I/O operations
+The procfs offers a “snapshot” into the state of the Linux Kernel and the processes it controls in the userspace
+You can find out the information on interrupts, virtual memory and the scheduler
+In the /proc/sys, you can find the settings you made on systctl.conf
+
+
+Try ‘file /proc/meminfo’
+You should get a message that saying file is empty
+This is because you didn’t actually issue a read for it
+     Now try this one ‘wc -l /proc/meminfo’:
+You should see some information about your memory and how it is being used
+
+    Finally, ‘ ls -lh /proc/meminfo’
+You should get a filesize of 0, again you didn’t read it
+
+You will find that every running process has a directory:
+And in that directory you can find information about just that process
+
+ 
+Sys:
+So  unlike proc, sys contains actual readable and writable data files
+The files in sys are known as kobjects
+Sys services as a reference counter for kobjects
+When the counter reaches 0, the kernel removes the kobject and reclaims any resources used by it
+One example of sys: stable Application Binary Interface (ABI) to userspace
+Files in sys are certainly not static
+But they are used as a scratchpad area to determine when to reclaim resources when they are no longer needed
+
+BPF or eBPF( Berkeley Packet Filter)
+Currently 112 tools on the bpfcc-tools package which needs to be installed
+Some of these tools can “snoop” on VFS and provide you information about how your system works
+Vfsstat which you find is called vfstat-bpfcc will show you every request for a file system in real time
+Sudo vfsstat
+And CTRL-C out when you are bored with it , it should update every second
+
+  
+
+BInd and overlay mounts are used by containers and man pages contain great information 
+
+
+
